@@ -18,9 +18,50 @@ PLAYER_VEL = 10
 JUMP_VEL = 15
 GRAVITY = 0.8
 
+
+#platform (x, y, length and width)
+LEVELS = {
+    1: [
+        (100, 750, 200, 20),
+        (400, 500, 200, 20),
+        (700, 400, 150, 20),
+    ],
+    2: [
+        (50, 650, 150, 20),
+        (300, 550, 100, 20),
+        (500, 450, 150, 20),
+        (750, 350, 100, 20),
+    ],
+    3: [
+        (150, 600, 100, 20),
+        (350, 500, 100, 20),
+        (550, 400, 100, 20),
+        (200, 300, 200, 20),
+        (600, 200, 150, 20),
+    ]
+}
+def check_platform_collision(player, platforms, vel_y):
+    """Check if player is landing on a platform"""
+    player_bottom = player.y + player.height
+    
+    for platform in platforms:
+        plat_rect = pygame.Rect(platform)
+        
+        # Check if player is falling onto platform
+        if (vel_y > 0 and 
+            player.x + player.width > plat_rect.x and 
+            player.x < plat_rect.x + plat_rect.width):
+            
+            # Check if player's bottom crosses platform's top
+            if player_bottom >= plat_rect.y and player_bottom <= plat_rect.y + plat_rect.height:
+                return plat_rect.y - player.height
+    
+    return None
 #makes players and draws them. ghost player is drawn differently than when active
-def draw(player1, player2, active_player): 
+def draw(player1, player2, active_player, platforms): 
     WIN.blit(BG, (0,0))
+    for platform in platforms:
+        pygame.draw.rect(WIN, (100, 100, 100), platform)
     if active_player == 1:
        pygame.draw.rect(WIN, (100, 100, 255), player2)
        pygame.draw.rect(WIN, "red", player1)
@@ -66,7 +107,8 @@ def main():
     active_player = 1 #tracks which player is active
     clock = pygame.time.Clock()
     game_started = False
-    
+    current_level = 1
+    platforms = [pygame.Rect(p) for p in LEVELS[current_level]]
     while run:
         clock.tick(60) #60 fps
         for event in pygame.event.get():
@@ -110,10 +152,18 @@ def main():
             if current_is_jumping:   #jump physics
                 current_player.y += current_vel_y
                 current_vel_y += GRAVITY
-                if current_player.y >= HEIGHT - PLAYER_HEIGHT:
-                    current_player.y = HEIGHT - PLAYER_HEIGHT
-                    current_is_jumping = False
-                    current_vel_y = 0
+    
+    # platform collision
+            platform_y = check_platform_collision(current_player, platforms, current_vel_y)
+            if platform_y is not None:
+                current_player.y = platform_y
+                current_is_jumping = False
+                current_vel_y = 0
+    # ground collision (needs work) 
+            elif current_player.y >= HEIGHT - PLAYER_HEIGHT:
+                current_player.y = HEIGHT - PLAYER_HEIGHT
+                current_is_jumping = False
+                current_vel_y = 0
             
             if active_player == 1:    #save all current values to the right player
                 player1_vel_y = current_vel_y
@@ -151,7 +201,7 @@ def main():
                 elif player1.x + player1.width > WIDTH:
                     player1.x = WIDTH - player1.width
             
-            draw(player1, player2, active_player)
+            draw(player1, player2, active_player, platforms)
     
     pygame.quit()
 
