@@ -1,3 +1,6 @@
+from sys import path
+path.append(".")
+
 import pygame
 import time
 import random
@@ -9,7 +12,7 @@ pygame.init()
 WIDTH, HEIGHT = 1000, 800
 WIN = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("game")
-BG = pygame.image.load("game background.jpeg")
+BG = pygame.image.load("assets/game background.jpeg")
 
 #game constants
 PLAYER_WIDTH = 40
